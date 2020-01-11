@@ -70,7 +70,7 @@ func (t *Telegram) SendNotification(rw http.ResponseWriter, r *http.Request) {
 			var msg string
 
 			if message.Title != "" {
-				msg = fmt.Sprintf("`%s`\n\n%s", message.Title, message.Message)
+				msg = fmt.Sprintf("*%s*\n\n%s", message.Title, message.Message)
 				msgconf = tgbotapi.NewMessage(ch, msg)
 			} else {
 				msg = fmt.Sprintf("%s", message.Message)
