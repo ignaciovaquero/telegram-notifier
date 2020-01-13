@@ -21,7 +21,7 @@ var (
 	wait           time.Duration
 	address, token string
 	port           int
-	loglevel       bool
+	verbose        bool
 	sugar          *zap.SugaredLogger
 )
 
@@ -93,7 +93,7 @@ func init() {
 					Usage:       "enable debug logs",
 					EnvVars:     []string{"NOTIFIER_BOT_VERBOSE"},
 					DefaultText: "false",
-					Destination: &loglevel,
+					Destination: &verbose,
 				},
 			},
 		},
@@ -121,7 +121,7 @@ func run(clictx *cli.Context) error {
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
-	if loglevel {
+	if verbose {
 		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	} else {
 		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
