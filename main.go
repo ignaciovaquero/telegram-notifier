@@ -100,12 +100,6 @@ func init() {
 	}
 }
 
-func printError(err error) {
-	if err != nil {
-		sugar.Fatalf("FATAL: %+v\n", err)
-	}
-}
-
 func run(clictx *cli.Context) error {
 	// Building the logger
 	var zl *zap.Logger
@@ -128,15 +122,16 @@ func run(clictx *cli.Context) error {
 	}
 	zl, err = cfg.Build()
 
-	printError(err)
+	if err != nil {
+		return err
+	}
 
 	sugar = zl.Sugar()
 	sugar.Debug("Logger initialization successful")
 
 	telegram, err := controllers.NewTelegram(token, sugar)
 	if err != nil {
-		sugar.Errorf("Error when initializing Telegram client: %s", err.Error())
-		os.Exit(1)
+		return fmt.Errorf("error when initializing Telegram client: %s", err.Error())
 	}
 
 	r := mux.NewRouter()
@@ -164,8 +159,7 @@ func run(clictx *cli.Context) error {
 	signal.Notify(c, os.Interrupt)
 	select {
 	case er := <-e:
-		sugar.Errorf("Error when listening at %s:%d -> %s", address, port, er.Error())
-		return er
+		return fmt.Errorf("error when listening at %s:%d -> %s", address, port, er.Error())
 	case <-c:
 		ctx, cancel := context.WithTimeout(context.Background(), wait)
 		defer cancel()
