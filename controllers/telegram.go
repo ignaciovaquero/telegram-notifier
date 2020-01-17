@@ -25,7 +25,7 @@ type Telegram struct {
 func NewTelegram(token string, log Logger) (*Telegram, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%v", err)
 	}
 	return &Telegram{
 		Logger: log,
