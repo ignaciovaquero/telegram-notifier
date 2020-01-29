@@ -176,6 +176,6 @@ func run(clictx *cli.Context) error {
 func main() {
 	err := app.Run(os.Args)
 	if err != nil {
-		sugar.Fatalf("%v", err)
+		panic(err)
 	}
 }
