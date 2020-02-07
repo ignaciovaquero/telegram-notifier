@@ -135,7 +135,7 @@ func run(clictx *cli.Context) error {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc(fmt.Sprintf("%s/notifications", apiVersion), telegram.SendNotification).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("%s/notifications", apiVersion), telegram.SendNotification).Methods(http.MethodPost)
 	sugar.Debug("Router setup complete")
 
 	srv := &http.Server{
