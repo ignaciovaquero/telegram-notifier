@@ -174,8 +174,7 @@ func run(clictx *cli.Context) error {
 }
 
 func main() {
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		panic(err)
 	}
 }
