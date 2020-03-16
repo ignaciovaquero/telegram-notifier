@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - image: igvaquero18/telegram-notifier:1.0.1
+        - image: igvaquero18/telegram-notifier:1.0.0
           imagePullPolicy: Always
           name: telegram-notifier
           resources:
