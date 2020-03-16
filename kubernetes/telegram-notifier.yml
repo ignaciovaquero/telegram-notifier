@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: telegram-notifier
+spec:
+  selector:
+    name: telegram-notifier
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-notifier
+  labels:
+    name: telegram-notifier
+spec:
+  selector:
+    matchLabels:
+      name: telegram-notifier
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        name: telegram-notifier
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - image: igvaquero18/telegram-notifier:1.0.1
+          imagePullPolicy: Always
+          name: telegram-notifier
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          env:
+            - name: NOTIFIER_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram
+                  key: token
+          ports:
+            - containerPort: 8081
+              name: http

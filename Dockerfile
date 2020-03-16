@@ -1,11 +1,11 @@
-FROM golang:1.13.6-alpine3.11 AS builder
+FROM golang:1.14.0-alpine3.11 AS builder
 
 WORKDIR /go/src/github.com/igvaquero18/telegram-notifier
 COPY . .
 RUN go build
 
 
-FROM alpine:3.11.2
+FROM alpine:3.11.3
 
 LABEL org.opencontainers.image.authors="Ignacio Vaquero <ivaqueroguisasola@gmail.com>" \
       org.opencontainers.image.source="https://github.com/igvaquero18/telegram-notifier" \
