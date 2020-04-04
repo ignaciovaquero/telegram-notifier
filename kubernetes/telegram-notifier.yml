@@ -8,7 +8,7 @@ spec:
   type: ClusterIP
   ports:
   - name: http
-    port: 80
+    port: 8081
     targetPort: http
 ---
 apiVersion: apps/v1
@@ -30,8 +30,7 @@ spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - image: igvaquero18/telegram-notifier:1.0.0
-          imagePullPolicy: Always
+        - image: registry.ivaquero.es/telegram-notifier:1.0.0
           name: telegram-notifier
           resources:
             requests:
@@ -52,6 +51,10 @@ spec:
 ---
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
+metadata:
+  name: telegram-notifier
+  labels:
+    name: telegram-notifier
 spec:
   maxReplicas: 5
   minReplicas: 2
