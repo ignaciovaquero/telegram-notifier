@@ -49,3 +49,14 @@ spec:
           ports:
             - containerPort: 8081
               name: http
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+spec:
+  maxReplicas: 5
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: telegram-notifier
+  targetCPUUtilizationPercentage: 70
