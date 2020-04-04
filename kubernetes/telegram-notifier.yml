@@ -4,7 +4,7 @@ metadata:
   name: telegram-notifier
 spec:
   selector:
-    name: telegram-notifier
+    app: telegram-notifier
   type: ClusterIP
   ports:
   - name: http
@@ -16,16 +16,16 @@ kind: Deployment
 metadata:
   name: telegram-notifier
   labels:
-    name: telegram-notifier
+    app: telegram-notifier
 spec:
   selector:
     matchLabels:
-      name: telegram-notifier
+      app: telegram-notifier
   replicas: 2
   template:
     metadata:
       labels:
-        name: telegram-notifier
+        app: telegram-notifier
     spec:
       imagePullSecrets:
         - name: regcred
@@ -54,7 +54,7 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: telegram-notifier
   labels:
-    name: telegram-notifier
+    app: telegram-notifier
 spec:
   maxReplicas: 5
   minReplicas: 2
