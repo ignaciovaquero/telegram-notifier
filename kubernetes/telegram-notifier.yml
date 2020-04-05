@@ -21,7 +21,7 @@ spec:
   selector:
     matchLabels:
       app: telegram-notifier
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -30,15 +30,15 @@ spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - image: registry.ivaquero.es/telegram-notifier:1.0.0
+        - image: registry.ignacioyeli.es/telegram-notifier:1.0.0
           name: telegram-notifier
           resources:
             requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
               cpu: 100m
               memory: 128Mi
-            limits:
-              cpu: 200m
-              memory: 256Mi
           env:
             - name: NOTIFIER_BOT_TOKEN
               valueFrom:
@@ -56,8 +56,8 @@ metadata:
   labels:
     app: telegram-notifier
 spec:
-  maxReplicas: 5
-  minReplicas: 2
+  maxReplicas: 3
+  minReplicas: 1
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
