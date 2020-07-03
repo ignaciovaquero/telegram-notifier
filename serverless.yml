@@ -24,6 +24,19 @@ frameworkVersion: '>=1.28.0 <2.0.0'
 provider:
   name: aws
   runtime: go1.x
+  stage: dev
+  region: eu-west-3
+  apiKeys:
+    - name: ${opt:stage}-telegram-notifier
+      description: API Key for accessing Telegram Notifier
+  usagePlan:
+    quota:
+      limit: 50
+      offset: 1
+      period: MONTH
+    throttle:
+      burstLimit: 5
+      rateLimit: 1
 
 # you can overwrite defaults here
 #  stage: dev
@@ -60,8 +73,9 @@ functions:
     handler: bin/aws
     events:
       - http:
-          path: hello
-          method: get
+          path: notification
+          method: post
+          private: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
