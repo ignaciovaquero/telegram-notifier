@@ -1,43 +1,81 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"go.uber.org/zap"
 )
 
-// Response is of type APIGatewayProxyResponse since we're leveraging the
-// AWS Lambda Proxy Request functionality (default behavior)
-//
-// https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
-type Response events.APIGatewayProxyResponse
+const (
+	verboseEnv string = "NOTIFIER_BOT_VERBOSE"
+	tokenEnv   string = "NOTIFIER_BOT_TOKEN"
+)
+
+var (
+	errorMsg            string
+	internalServerError *events.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
+		StatusCode: http.StatusInternalServerError,
+	}
+)
+
+func getOrElse(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
 
 // Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (Response, error) {
-	var buf bytes.Buffer
-
-	body, err := json.Marshal(map[string]interface{}{
-		"message": "Go Serverless v1.0! Your function executed successfully!",
-	})
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	v := getOrElse(verboseEnv, "true")
+	verbose, err := strconv.ParseBool(v)
 	if err != nil {
-		return Response{StatusCode: 404}, err
+		fmt.Printf("Incorrect value for %s: %s. Defaulting to false", verboseEnv, v)
+		verbose = false
 	}
-	json.HTMLEscape(&buf, body)
 
-	resp := Response{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"Content-Type":           "application/json",
-			"X-MyCompany-Func-Reply": "hello-handler",
+	var zl *zap.Logger
+	cfg := zap.Config{
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
 		},
+		Encoding:         "json",
+		EncoderConfig:    zap.NewProductionEncoderConfig(),
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+	if verbose {
+		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	} else {
+		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	}
+	zl, err = cfg.Build()
+
+	if err != nil {
+		errorMsg = fmt.Sprintf("Error when initializing logger: %v", err)
+		internalServerError.Body = errorMsg
+		return internalServerError, fmt.Errorf(errorMsg)
 	}
 
-	return resp, nil
+	sugar := zl.Sugar()
+	sugar.Debug("Logger initialization successful")
+
+	telegramClient, err := telegram.NewTelegram(os.Getenv(tokenEnv), sugar)
+	if err != nil {
+		errorMsg = fmt.Sprintf("Error when initializing the Telegram Client: %s", err.Error())
+		internalServerError.Body = errorMsg
+		return internalServerError, fmt.Errorf(errorMsg)
+	}
+
 }
 
 func main() {
