@@ -2,25 +2,38 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/igvaquero18/telegram-notifier/telegram"
 	"go.uber.org/zap"
 )
 
 const (
-	verboseEnv string = "NOTIFIER_BOT_VERBOSE"
 	tokenEnv   string = "NOTIFIER_BOT_TOKEN"
+	verboseEnv string = "NOTIFIER_BOT_VERBOSE"
 )
 
 var (
+	token               string = os.Getenv(tokenEnv)
+	v                   string = getOrElse(verboseEnv, "true")
+	sugar               *zap.SugaredLogger
 	errorMsg            string
+	telegramClient      *telegram.Client
+	verbose             bool
 	internalServerError *events.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusInternalServerError,
+	}
+	badRequest *events.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
+		StatusCode: http.StatusBadGateway,
+	}
+	okResponse *events.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
 	}
 )
 
@@ -32,12 +45,12 @@ func getOrElse(key, defaultValue string) string {
 	return value
 }
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	v := getOrElse(verboseEnv, "true")
-	verbose, err := strconv.ParseBool(v)
+func init() {
+	var err error
+
+	verbose, err = strconv.ParseBool(v)
 	if err != nil {
-		fmt.Printf("Incorrect value for %s: %s. Defaulting to false", verboseEnv, v)
+		log.Printf("Incorrect value for %s: %s. Defaulting to false", verboseEnv, v)
 		verbose = false
 	}
 
@@ -61,21 +74,32 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (*event
 	zl, err = cfg.Build()
 
 	if err != nil {
-		errorMsg = fmt.Sprintf("Error when initializing logger: %v", err)
-		internalServerError.Body = errorMsg
-		return internalServerError, fmt.Errorf(errorMsg)
+		log.Fatalf("Error when initializing logger: %v", err)
 	}
 
-	sugar := zl.Sugar()
+	sugar = zl.Sugar()
 	sugar.Debug("Logger initialization successful")
 
-	telegramClient, err := telegram.NewTelegram(os.Getenv(tokenEnv), sugar)
+	telegramClient, err = telegram.NewClient(token, sugar)
 	if err != nil {
-		errorMsg = fmt.Sprintf("Error when initializing the Telegram Client: %s", err.Error())
-		internalServerError.Body = errorMsg
-		return internalServerError, fmt.Errorf(errorMsg)
+		log.Fatalf("Error when initializing the Telegram Client: %s", err.Error())
+	}
+}
+
+// Handler is our lambda handler invoked by the `lambda.Start` function call
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	message := &telegram.Message{}
+
+	if err := json.Unmarshal([]byte(request.Body), message); err != nil {
+		badRequest.Body = err.Error()
+		return badRequest, err
 	}
 
+	if err := telegramClient.SendMessage(message); err != nil {
+		internalServerError.Body = err.Error()
+		return internalServerError, err
+	}
+	return okResponse, nil
 }
 
 func main() {

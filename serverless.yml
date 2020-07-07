@@ -27,7 +27,7 @@ provider:
   stage: dev
   region: eu-west-3
   apiKeys:
-    - name: ${opt:stage}-telegram-notifier
+    - name: telegram-notifier
       description: API Key for accessing Telegram Notifier
   usagePlan:
     quota:
@@ -37,7 +37,9 @@ provider:
     throttle:
       burstLimit: 5
       rateLimit: 1
-
+  environment:
+    NOTIFIER_BOT_VERBOSE: 0
+    NOTIFIER_BOT_TOKEN: ${ssm:NOTIFIER_BOT_TOKEN~true}
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -73,7 +75,7 @@ functions:
     handler: bin/aws
     events:
       - http:
-          path: notification
+          path: /v1/notification
           method: post
           private: true
 #    The following are a few example events you can configure
