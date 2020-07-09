@@ -16,7 +16,7 @@ type Client struct {
 	*tgbotapi.BotAPI
 }
 
-// NewTelegram returns a pointer to a Client object
+// NewClient returns a pointer to a Client object
 func NewClient(token string, log Logger) (*Client, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {

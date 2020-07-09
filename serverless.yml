@@ -32,11 +32,11 @@ provider:
   usagePlan:
     quota:
       limit: 50
-      offset: 1
-      period: MONTH
+      offset: 0
+      period: DAY
     throttle:
-      burstLimit: 5
-      rateLimit: 1
+      burstLimit: 100
+      rateLimit: 50
   environment:
     NOTIFIER_BOT_VERBOSE: 0
     NOTIFIER_BOT_TOKEN: ${ssm:NOTIFIER_BOT_TOKEN~true}

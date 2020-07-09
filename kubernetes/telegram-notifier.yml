@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - image: registry.ignacioyeli.es/telegram-notifier:1.0.0
+        - image: registry.ignacioyeli.es/telegram-notifier:2.0.0
           name: telegram-notifier
           resources:
             requests:
