@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gorilla/mux"
-	"github.com/igvaquero18/telegram-notifier/controllers"
+	"github.com/igvaquero18/telegram-notifier/telegram"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -23,6 +23,7 @@ var (
 	port           int
 	verbose        bool
 	sugar          *zap.SugaredLogger
+	telegramClient *telegram.Client
 )
 
 const (
@@ -129,13 +130,14 @@ func run(clictx *cli.Context) error {
 	sugar = zl.Sugar()
 	sugar.Debug("Logger initialization successful")
 
-	telegram, err := controllers.NewTelegram(token, sugar)
+	telegramClient, err = telegram.NewClient(token, sugar)
 	if err != nil {
 		return fmt.Errorf("error when initializing Telegram client: %v", err)
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc(fmt.Sprintf("%s/notifications", apiVersion), telegram.SendNotification).Methods(http.MethodPost)
+	r.HandleFunc(fmt.Sprintf("%s/notification", apiVersion), SendMessage).Methods(http.MethodPost)
+	r.Use(LoggingMiddleware)
 	sugar.Debug("Router setup complete")
 
 	srv := &http.Server{
